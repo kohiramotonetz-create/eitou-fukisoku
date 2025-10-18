@@ -1,6 +1,6 @@
 // App.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import wordsCsv from "./data/words.csv?raw"; // CSV: A=No. / B=問題 / C=解答（複数は "/" 区切り推奨）
+import wordsCsv from "./words.csv?raw"; // CSV: A=No. / B=問題 / C=解答（複数は "/" 区切り推奨）
 
 // ========= 設定 =========
 const QUESTION_COUNT = 20;
