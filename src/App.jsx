@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import wordsCsv from "./data/words.csv?raw"; // CSV: A=No. / B=問題 / C=解答（複数は "/" 区切り推奨）
 
@@ -5,15 +6,15 @@ import wordsCsv from "./data/words.csv?raw"; // CSV: A=No. / B=問題 / C=解答
 const QUESTION_COUNT = 20;
 const TOTAL_TIME_SEC_DEFAULT = 300; // 全体5分
 const USE_TOTAL_TIMER = true;
-const SKIP_HEADER = false;                 // CSVの先頭にヘッダー行があるなら true
+const SKIP_HEADER = false;                 // CSV 先頭にヘッダーがあるなら true
 const TARGET_SHEET_NAME = "英単語ログ";     // ← 送信先シート名（任意に変更OK）
 const MODE_FIXED = "日本語→英単語";
 const DIFF_FIXED = "なし";
 
 // ========= ユーティリティ =========
-function parseCsvRaw(csvText: string) {
-  const rows: string[][] = [];
-  let i = 0, field = "", row: string[] = [], inQuotes = false;
+function parseCsvRaw(csvText) {
+  const rows = [];
+  let i = 0, field = "", row = [], inQuotes = false;
   const pushField = () => { row.push(field); field = ""; };
   const pushRow = () => { rows.push(row); row = []; };
 
@@ -39,16 +40,16 @@ function parseCsvRaw(csvText: string) {
   return rows;
 }
 
-function trimSpaces(s: string) { return String(s || "").replace(/\s+/g, " ").trim(); }
-function normalizeEn(s: string) { 
-  // 必要に応じてハイフン/アポストロフィ吸収も可能: .replace(/[-’']/g, "")
-  return trimSpaces(s).toLowerCase(); 
+function trimSpaces(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
+function normalizeEn(s) {
+  // 必要ならハイフン/アポストロフィ無視も可: .replace(/[-’']/g, "")
+  return trimSpaces(s).toLowerCase();
 }
 
-// ★追加：複数解答候補の分割（半角/全角スラッシュ、カンマ等も許容）
-function splitAnswerCandidates(s: string): string[] {
+// 複数解答候補の分割（半角/全角スラッシュ、カンマ、日本語読点、セミコロン、縦棒も許容）
+function splitAnswerCandidates(s) {
   if (!s) return [];
-  const DELIMS = /[\/／,、;|]/g; // "/", "／", "," などもOK
+  const DELIMS = /[\/／,、;|]/g;
   return s
     .split(DELIMS)
     .map(part => normalizeEn(part))
@@ -56,13 +57,13 @@ function splitAnswerCandidates(s: string): string[] {
 }
 
 // 日本語→英単語（候補のどれかに一致で正解）
-function judgeAnswerJPtoEN(user: string, item: any) {
+function judgeAnswerJPtoEN(user, item) {
   const userNorm = normalizeEn(user);
   const candidates = splitAnswerCandidates(item.en); // 例: "color/colour" → ["color","colour"]
   return candidates.includes(userNorm);
 }
 
-function sampleUnique<T>(arr: T[], k: number) {
+function sampleUnique(arr, k) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = (Math.random() * (i + 1)) | 0;
@@ -80,10 +81,10 @@ export default function App() {
 
   // グローバル state
   const [name, setName] = useState("");
-  const [allItems, setAllItems] = useState<any[]>([]);
-  const [items, setItems] = useState<any[]>([]);
-  const [answers, setAnswers] = useState<any[]>([]);
-  const [step, setStep] = useState<"start" | "quiz" | "result">("start");
+  const [allItems, setAllItems] = useState([]);
+  const [items, setItems] = useState([]);
+  const [answers, setAnswers] = useState([]);
+  const [step, setStep] = useState("start"); // start | quiz | result
   const [qIndex, setQIndex] = useState(0);
 
   // 入力欄
@@ -91,7 +92,7 @@ export default function App() {
 
   // timers
   const [totalLeft, setTotalLeft] = useState(TOTAL_TIME_SEC_DEFAULT);
-  const totalTimerRef = useRef<any>(null);
+  const totalTimerRef = useRef(null);
 
   // CSV読み込み（No./問題/解答）
   useEffect(() => {
@@ -116,7 +117,7 @@ export default function App() {
     setAllItems(mapped);
   }, []);
 
-  // 今回は難易度なし → 全件プール
+  // 難易度なし → 全件プール
   const pool = useMemo(() => allItems, [allItems]);
 
   // 開始可能条件
@@ -154,7 +155,7 @@ export default function App() {
     }
   }
 
-  function submitAnswer(userInput: string) {
+  function submitAnswer(userInput) {
     const item = items[qIndex];
     if (!item) return;
 
@@ -183,7 +184,7 @@ export default function App() {
     setStep("result");
   }
 
-  const [showReview, setShowReview] = useState<{visible: boolean; record: any | null}>({ visible: false, record: null });
+  const [showReview, setShowReview] = useState({ visible: false, record: null });
 
   // ---- 結果送信（別シートへ追記）----
   async function sendResult() {
@@ -217,7 +218,7 @@ export default function App() {
   }
 
   // ---- 画面描画 ----
-  let content: React.ReactNode = null;
+  let content = null;
 
   if (step === "start") {
     content = (
@@ -416,10 +417,6 @@ export default function App() {
 function QuizFrame({
   index, total, display, totalLeft,
   value, setValue, onSubmit, showReview, onCloseReview,
-}: {
-  index: number; total: number; display: string; totalLeft: number | null;
-  value: string; setValue: (v: string) => void; onSubmit: () => void;
-  showReview: {visible: boolean; record: any | null}; onCloseReview: () => void;
 }) {
   return (
     <div style={wrapStyle}>
@@ -463,14 +460,14 @@ function QuizFrame({
   );
 }
 
-function Timer({ label, sec }: {label: string; sec: number}) {
+function Timer({ label, sec }) {
   const mm = String(Math.floor(sec / 60)).padStart(2, "0");
   const ss = String(sec % 60).padStart(2, "0");
   return <div style={{ fontFamily: "ui-monospace, monospace" }}>{label}:{mm}:{ss}</div>;
 }
 
 // ========= スタイル =========
-const wrapStyle: React.CSSProperties = {
+const wrapStyle = {
   width: "min(680px, 92vw)",
   margin: "0 auto",
   padding: "24px 16px",
@@ -481,8 +478,8 @@ const wrapStyle: React.CSSProperties = {
   gap: 12,
   boxSizing: "border-box",
 };
-const labelStyle: React.CSSProperties = { alignSelf: "center", fontSize: 14, marginTop: 8, color: "#333" };
-const inputStyle: React.CSSProperties = {
+const labelStyle = { alignSelf: "center", fontSize: 14, marginTop: 8, color: "#333" };
+const inputStyle = {
   width: "100%",
   padding: "12px 14px",
   fontSize: 16,
@@ -491,7 +488,7 @@ const inputStyle: React.CSSProperties = {
   background: "#fff",
   color: "#111",
 };
-const primaryBtnStyle: React.CSSProperties = {
+const primaryBtnStyle = {
   marginTop: 12,
   padding: "12px 18px",
   borderRadius: 12,
@@ -501,7 +498,7 @@ const primaryBtnStyle: React.CSSProperties = {
   fontSize: 16,
   cursor: "pointer",
 };
-const questionBoxStyle: React.CSSProperties = {
+const questionBoxStyle = {
   width: "100%",
   background: "#f7f7f7",
   border: "1px solid #ddd",
@@ -510,10 +507,10 @@ const questionBoxStyle: React.CSSProperties = {
   boxShadow: "0 2px 6px rgba(0,0,0,.05)",
   color: "#111",
 };
-const reviewStyle: React.CSSProperties = {
+const reviewStyle = {
   width: "100%",
   background: "#fff",
-  border: "1px solid "#eee",
+  border: "1px solid #eee",
   borderRadius: 16,
   padding: 14,
   marginTop: 12,
