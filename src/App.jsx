@@ -93,6 +93,7 @@ export default function App() {
   // timers
   const [totalLeft, setTotalLeft] = useState(TOTAL_TIME_SEC_DEFAULT);
   const totalTimerRef = useRef(null);
+  const totalPausedRef = useRef(false); // ★追加：全体タイマー一時停止フラグ
 
   // CSV読み込み（No./問題/解答）
   useEffect(() => {
@@ -143,15 +144,19 @@ export default function App() {
       setTotalLeft(TOTAL_TIME_SEC_DEFAULT);
       if (totalTimerRef.current) clearInterval(totalTimerRef.current);
       totalTimerRef.current = setInterval(() => {
-        setTotalLeft((t) => {
-          if (t <= 1) {
-            clearInterval(totalTimerRef.current);
-            finishQuiz();
-            return 0;
-          }
-          return t - 1;
-        });
-      }, 1000);
+  　　　setTotalLeft((t) => {
+    　　// ★追加：一時停止中はカウントを進めない
+    　　if (totalPausedRef.current) return t;
+
+    　　if (t <= 1) {
+    　　clearInterval(totalTimerRef.current);
+    　　finishQuiz();
+    　　return 0;
+  　　}　
+  　　return t - 1;
+ 　　 });
+　　}, 1000);
+
     }
   }
 
@@ -169,6 +174,7 @@ export default function App() {
     };
     setAnswers((prev) => [...prev, record]);
     setShowReview({ visible: true, record });
+    if (USE_TOTAL_TIMER) totalPausedRef.current = true; // ★追加：レビュー表示中は停止
   }
 
   function nextQuestion() {
@@ -263,7 +269,11 @@ export default function App() {
           setValue={setValue}
           onSubmit={() => submitAnswer(value)}
           showReview={showReview}
-          onCloseReview={() => { setShowReview({ visible: false, record: null }); nextQuestion(); }}
+          onCloseReview={() => {
+  　　　　　setShowReview({ visible: false, record: null });
+  　　　　　if (USE_TOTAL_TIMER) totalPausedRef.current = false; // ★追加：レビュー終了で再開
+  　　　　　nextQuestion();
+　　　　　　}}
         />
       );
     }
