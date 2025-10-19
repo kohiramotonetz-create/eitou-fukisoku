@@ -423,8 +423,7 @@ function QuizFrame({
   const [practiceMsg, setPracticeMsg] = useState("");
 
   // 本番の解答ボタン（答え合わせ）は、レビュー表示中や未入力なら無効化
-  const disabled = showReview.visible || !trimSpaces(value).length;
-
+　const disabled = showReview.visible; // ← 入力の空欄では無効化しない
   // 練習判定（①）：成績には反映しない。正しく打てたら次の問題へ、間違いなら再入力を促す
   const handlePracticeSubmit = () => {
     const user = normalizeEn(practice);
@@ -458,16 +457,16 @@ function QuizFrame({
         style={{ ...inputStyle, width: "92%", margin: "0 auto" }}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !disabled) onSubmit(); }}
+        onKeyDown={(e) => { if (e.key === "Enter" && !showReview.visible) onSubmit(); }}
         placeholder="example: run"
       />
       <button
-        style={{ ...primaryBtnStyle, opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
-        onClick={() => !disabled && onSubmit()}
-        disabled={disabled}
-      >
-        答え合わせ
-      </button>
+  　　　style={{ ...primaryBtnStyle, opacity: showReview.visible ? 0.6 : 1, cursor: showReview.visible ? "not-allowed" : "pointer" }}
+ 　　 　onClick={() => { if (!showReview.visible) onSubmit(); }}
+  　　　disabled={showReview.visible}
+>
+　　　　  答え合わせ
+　　　　</button>
 
       {/* 答え合わせ（レビュー） */}
       {showReview.visible && (
