@@ -418,6 +418,26 @@ function QuizFrame({
   index, total, display, totalLeft,
   value, setValue, onSubmit, showReview, onCloseReview,
 }) {
+  // 練習用フォームのローカル状態（不正解のときだけ使う）
+  const [practice, setPractice] = useState("");
+  const [practiceMsg, setPracticeMsg] = useState("");
+
+  // 本番の解答ボタン（答え合わせ）は、レビュー表示中や未入力なら無効化
+  const disabled = showReview.visible || !trimSpaces(value).length;
+
+  // 練習判定（①）：成績には反映しない。正しく打てたら次の問題へ、間違いなら再入力を促す
+  const handlePracticeSubmit = () => {
+    const user = normalizeEn(practice);
+    const cands = splitAnswerCandidates(showReview.record.correct); // "color/colour" → ["color","colour"]
+    if (cands.includes(user)) {
+      setPracticeMsg("");
+      setPractice("");
+      onCloseReview(); // 正しく書けたら次の問題へ
+    } else {
+      setPracticeMsg("不正解。もう一度入力してみよう。");
+    }
+  };
+
   return (
     <div style={wrapStyle}>
       <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: 8 }}>
@@ -432,33 +452,79 @@ function QuizFrame({
         <div style={{ fontSize: 22, color: "#111" }}>{display}</div>
       </div>
 
+      {/* 本番の解答入力（通常どおり） */}
       <label style={labelStyle}>英単語を入力</label>
       <input
         style={inputStyle}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
+        onKeyDown={(e) => { if (e.key === "Enter" && !disabled) onSubmit(); }}
         placeholder="example: run"
       />
-      <button style={primaryBtnStyle} onClick={onSubmit}>答え合わせ</button>
+      <button
+        style={{ ...primaryBtnStyle, opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
+        onClick={() => !disabled && onSubmit()}
+        disabled={disabled}
+      >
+        答え合わせ
+      </button>
 
+      {/* 答え合わせ（レビュー） */}
       {showReview.visible && (
         <div style={reviewStyle}>
           <div style={{ fontWeight: "bold", marginBottom: 8 }}>答え合わせ</div>
           <div>問題：{showReview.record.q}</div>
           <div>あなた：{showReview.record.a || "（無回答）"}</div>
-          <div>
+          <div style={{ marginBottom: 8 }}>
             模範解答：<b>{showReview.record.correct}</b>{" "}
             {showReview.record.ok ? "✅ 正解" : "❌ 不正解"}
           </div>
-          <button style={{ ...primaryBtnStyle, marginTop: 12 }} onClick={onCloseReview}>
-            次の問題へ
-          </button>
+
+          {showReview.record.ok ? (
+            // ✅ 正解時：従来どおり「次の問題へ」だけ表示
+            <button style={{ ...primaryBtnStyle, marginTop: 8 }} onClick={onCloseReview}>
+              次の問題へ
+            </button>
+          ) : (
+            // ❌ 不正解時：①練習用フォーム＋「回答する」／②次の問題に進む
+            <>
+              <div style={{ textAlign: "left", margin: "8px 0 6px", color: "#333" }}>
+                ① 正しい単語を入力（練習用・成績には反映しません）
+              </div>
+              <input
+                style={inputStyle}
+                value={practice}
+                onChange={(e) => setPractice(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handlePracticeSubmit(); }}
+                placeholder="模範解答を見ながら正しく入力"
+              />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                <button
+                  style={primaryBtnStyle}
+                  onClick={handlePracticeSubmit}
+                >
+                  回答する（練習）
+                </button>
+                <button
+                  style={{ ...primaryBtnStyle, background: "#555" }}
+                  onClick={onCloseReview}
+                >
+                  ② 次の問題に進む
+                </button>
+              </div>
+              {practiceMsg && (
+                <div style={{ marginTop: 8, color: "#b00020", fontWeight: "bold" }}>
+                  {practiceMsg}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
   );
 }
+
 
 function Timer({ label, sec }) {
   const mm = String(Math.floor(sec / 60)).padStart(2, "0");
