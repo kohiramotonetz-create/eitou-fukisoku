@@ -455,7 +455,7 @@ function QuizFrame({
       {/* 本番の解答入力（通常どおり） */}
       <label style={labelStyle}>英単語を入力</label>
       <input
-        style={inputStyle}
+        style={{ ...inputStyle, width: "92%", margin: "0 auto" }}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !disabled) onSubmit(); }}
