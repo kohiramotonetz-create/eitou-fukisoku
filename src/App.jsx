@@ -492,18 +492,20 @@ function QuizFrame({
                 ① 正しい単語を入力（練習用・成績には反映しません）
               </div>
               <input
-                style={{inputStyle
-                width: "100%",
-                maxWidth: "500px",      // ← はみ出し防止
-                margin: "0 auto",       // ← 真ん中に揃える
-                display: "block",       // ← margin中央寄せのため必要
-                boxSizing: "border-box" // ← paddingでズレないように
-                }}
-                value={practice}
-                onChange={(e) => setPractice(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handlePracticeSubmit(); }}
-                placeholder="模範解答を見ながら正しく入力"
-              />
+  　　　　　　　　style={{
+   　　　　　　　　 ...inputStyle,
+   　　　　　　　　 width: "100%",
+    　　　　　　　　maxWidth: "500px",
+    　　　　　　　　margin: "0 auto",
+    　　　　　　　　display: "block",
+    　　　　　　　　boxSizing: "border-box"
+  　　　　　　}}
+  　　　　　　value={practice}
+ 　　 　　　　onChange={(e) => setPractice(e.target.value)}
+  　　　　　　onKeyDown={(e) => { if (e.key === "Enter") handlePracticeSubmit(); }}
+  　　　　　　placeholder="模範解答を見ながら正しく入力"
+　　　　　　　/>
+
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
                 <button
                   style={primaryBtnStyle}
