@@ -2,7 +2,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import wordsCsv from "./words.csv?raw"; // CSV: A=No. / B=問題 / C=解答（複数は "/" 区切り推奨）
 
-// ========= 設定 =========
+
+// ========= 設定修正 =========
 const QUESTION_COUNT = 20;
 const TOTAL_TIME_SEC_DEFAULT = 300; // 全体5分
 const USE_TOTAL_TIMER = true;
